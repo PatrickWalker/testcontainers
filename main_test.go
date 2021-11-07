@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
 )
 
 type appContainer struct {
@@ -20,7 +21,9 @@ func setupAppUnderTest(ctx context.Context) (*appContainer, error) {
 			Context:    ".",
 			Dockerfile: "Dockerfile",
 		},
+
 		ExposedPorts: []string{"8080/tcp"},
+		WaitingFor:   wait.ForHTTP("/").WithPort("8080"),
 	}
 	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
