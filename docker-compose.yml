@@ -1,0 +1,56 @@
+version: '3.9'
+services:
+  #Apps
+  users-api:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    depends_on:
+      - users-flyway      
+    ports:
+      - "8082:8080"
+    entrypoint: [ "/root/wait-for","users-db:5432","-t", "30","--", "/root/main" ]
+    environment:
+      - SERVICE_URL=http://mock-dep-api
+      - DB_HOST=users-db
+      - DB_USER=postgres
+      - DB_PWD=postgres
+      - DB_SCHEMA=users
+      - REDIS_URI=redis:6379
+
+  #Infrastructure
+  users-db:
+    container_name: users-db
+    image: postgres:12-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: users
+      PG_DATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+
+  users-flyway:
+    container_name: users-flyway
+    restart: on-failure
+    build:
+      context: ./flyway
+      dockerfile: Dockerfile.migrate
+    environment:
+      FLYWAY_PLACEHOLDERS_USERPASSWORD: users
+    depends_on:
+      - users-db
+    command: [ "migrate" ]
+    entrypoint: [ "/flyway/wait-for","users-db:5432","-t", "30","--", "/flyway/flyway", "migrate" ]
+    volumes:
+      - ./flyway/flyway.conf:/flyway/conf/flyway.conf
+
+  redis:
+    container_name: redis
+    image: "redis:alpine"
+
+  #dependencies
+  mock-dep-api:
+    container_name: mock-dep-api
+    image: ealen/echo-server

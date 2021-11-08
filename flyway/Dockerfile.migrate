@@ -1,0 +1,3 @@
+FROM flyway/flyway:7.8.2-alpine
+ADD ./migration/* /flyway/sql/
+ADD ./wait-for /flyway/

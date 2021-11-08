@@ -31,6 +31,7 @@ WORKDIR /root/
 
 # Copy the pre-built binary file from the previous stage. Observe we also copied the app.env file
 COPY --from=builder /app/main .
+COPY ./wait-for .
 
 # Exposet post 8080 to the outside world
 EXPOSE 8080 8080
